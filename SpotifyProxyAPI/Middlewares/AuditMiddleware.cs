@@ -5,9 +5,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Formatting.Compact;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using SpotifyProxyAPI.Models;
 

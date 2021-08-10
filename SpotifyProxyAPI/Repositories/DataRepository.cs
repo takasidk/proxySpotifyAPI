@@ -53,10 +53,9 @@ namespace SpotifyProxyAPI.Repositories
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
                 response.EnsureSuccessStatusCode();
-
+                ExpireTime = DateTime.Now.AddHours(1);
                 using var responseStream = await response.Content.ReadAsStreamAsync();
                 var authResult = await System.Text.Json.JsonSerializer.DeserializeAsync<AuthResponse>(responseStream);
-                ExpireTime = DateTime.Now.AddHours(1);
                 AccessToken = authResult.access_token;
 
             }
