@@ -1,15 +1,14 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Serilog;
+using SpotifyProxyAPI.Middlewares;
+using SpotifyProxyAPI.Models;
+using SpotifyProxyAPI.Repositories;
+using SpotifyProxyAPI.Repositories.Interfaces;
 
 namespace SpotifyProxyAPI
 {
@@ -25,7 +24,31 @@ namespace SpotifyProxyAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<DatabaseSettings>(options =>
+            {
+                Configuration.GetSection("DatabaseSettings").Bind(options);
+            });
+            services.Configure<UserSettings>(options =>
+            {
+                Configuration.GetSection("UserSettings").Bind(options);
+            });
             services.AddControllers();
+            services.AddSwaggerDocument();
+            services.AddSingleton<IDataRepository, DataRepository>();
+            services.AddHttpClient();
+            if (Configuration["UserSettings:EnableMiniProfiler"] == "True")
+            {
+                services.AddMiniProfiler(options =>
+                {
+                    options.RouteBasePath = Configuration["UserSettings:BasePath"] + "/miniprofiler";
+                });
+            }
+
+            services.Configure<ApiBehaviorOptions>(a =>
+            {
+                a.SuppressModelStateInvalidFilter = true;
+
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -36,12 +59,20 @@ namespace SpotifyProxyAPI
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
 
+            app.UseHttpsRedirection();
+            app.UseSerilogRequestLogging();
+
+            app.UseOpenApi();
+            app.UseSwaggerUi3();
+            if (Configuration["UserSettings:EnableMiniProfiler"] == "True")
+            {
+                app.UseMiniProfiler();
+            }
             app.UseRouting();
 
             app.UseAuthorization();
-
+            app.UseMiddleware(typeof(AuditMiddleware));
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
