@@ -14,6 +14,8 @@ using System.Threading.Tasks;
 using SpotifyProxyAPI.Helpers;
 using SpotifyProxyAPI.Models;
 using SpotifyProxyAPI.Repositories.Interfaces;
+using System.Net;
+using Microsoft.AspNetCore.Mvc;
 
 namespace SpotifyProxyAPI.Repositories
 {
@@ -61,12 +63,12 @@ namespace SpotifyProxyAPI.Repositories
             }
             return AccessToken;
         }
-        public async Task<ResponseDTO> GetItems(ItemRequest itemRequest, string accessToken)
+        public async Task<ActionResult> GetItems(ItemRequest itemRequest, string accessToken)
 
         {
             List<ResponseDTO> myList = new List<ResponseDTO>();
             var query = itemRequest.Query;
-            var filter = new BsonDocument("Query", "sam");
+            var filter = new BsonDocument("Query", query);
             using (MiniProfiler.Current.Step("Time taken to retrieve data from database"))
             {
                 myList = _data.Find(filter).ToList();
@@ -82,30 +84,55 @@ namespace SpotifyProxyAPI.Repositories
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
                 var response = await client.GetAsync($"search?q={query}&type=artist&market={itemRequest.market}");//&offset=5&limit=5
-                response.EnsureSuccessStatusCode();
 
-                var responseStream = response.Content.ReadAsStringAsync().Result;
-                var responseObject = JsonConvert.DeserializeObject<ItemResponse>(responseStream);
-
-                var Items = responseObject?.artists?.items.OrderByDescending(i => i.followers.total).Take(5);//.ThenBy(i => i.Popularity);
-                var res = new ResponseDTO
+                if (response.StatusCode==HttpStatusCode.OK)
                 {
-                    Query = query,
-                    Market = itemRequest.market,
-                    ArtistsList = Items.Select(i => new Top5Artists
-                    {
-                        Id = i.id,
-                        Name = i.name,
-                        Followers = i.followers.total,
-                        Popularity = i.popularity,
-                        Link = i.external_urls.spotify
-                    })
-                };
-                await _data.InsertOneAsync(res);
-                return res;
-            }
 
-            return myList[0];
+                    var responseStream = response.Content.ReadAsStringAsync().Result;
+                    var responseObject = JsonConvert.DeserializeObject<ItemResponse>(responseStream);
+
+                    var Items = responseObject?.artists?.items.OrderByDescending(i => i.followers.total).Take(5);//.ThenBy(i => i.Popularity);
+                    var res = new ResponseDTO
+                    {
+                        Query = query,
+                        Market = itemRequest.market,
+                        ArtistsList = Items.Select(i => new Top5Artists
+                        {
+                            Id = i.id,
+                            Name = i.name,
+                            Followers = i.followers.total,
+                            Popularity = i.popularity,
+                            Link = i.external_urls.spotify
+                        })
+                    };
+                    await _data.InsertOneAsync(res);
+                    return new ContentResult
+                    {
+                        Content = JsonConvert.SerializeObject(res),
+                        ContentType = Constants.JSON_CONTENT,
+                        StatusCode = 200
+                    };
+                }
+                else if (response.StatusCode==HttpStatusCode.NotFound)
+                {
+                    var errorResponse = new ErrorResponse();
+                    errorResponse.ErrorMessage = "resource not found";
+                    errorResponse.StatusCode = 404;
+                    return new ContentResult
+                    {
+                        Content = JsonConvert.SerializeObject(errorResponse),
+                        ContentType = Constants.JSON_CONTENT,
+                        StatusCode = 404
+                    };
+                }
+            }
+            
+            return new ContentResult
+            {
+                Content = JsonConvert.SerializeObject(myList[0]),
+                ContentType = Constants.JSON_CONTENT,
+                StatusCode = 200
+            }; 
         }
 
 
