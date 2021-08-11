@@ -66,7 +66,7 @@ namespace SpotifyProxyAPI.Repositories
         {
             List<ResponseDTO> myList = new List<ResponseDTO>();
             var query = itemRequest.Query;
-            var filter = new BsonDocument("Query", new BsonDocument("$regex", query));
+            var filter = new BsonDocument("Query", "sam");
             using (MiniProfiler.Current.Step("Time taken to retrieve data from database"))
             {
                 myList = _data.Find(filter).ToList();
