@@ -12,7 +12,7 @@ namespace SpotifyProxyAPI.Helpers
 
             if (!actionContext.ModelState.IsValid)
             {
-                var response = new ErrorResponse
+                var response = new Error
                 {
                     StatusCode = 400,
                     ErrorMessage = string.Join(", ", actionContext.ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage))

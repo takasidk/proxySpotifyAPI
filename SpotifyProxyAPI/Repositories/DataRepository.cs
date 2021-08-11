@@ -108,16 +108,28 @@ namespace SpotifyProxyAPI.Repositories
                     await _data.InsertOneAsync(res);
                     return new ContentResult
                     {
-                        Content = JsonConvert.SerializeObject(res),
+                        Content = JsonConvert.SerializeObject(res.ArtistsList),
                         ContentType = Constants.JSON_CONTENT,
                         StatusCode = 200
                     };
                 }
-                else if (response.StatusCode==HttpStatusCode.NotFound)
+                else if (response.StatusCode==HttpStatusCode.BadRequest)
+                {
+                    var responseStream = response.Content.ReadAsStringAsync().Result;
+                    var responseObject = JsonConvert.DeserializeObject<ErrorResponse>(responseStream);                  
+                    return new ContentResult
+                    {
+                        Content = JsonConvert.SerializeObject(responseObject?.Error),
+                        ContentType = Constants.JSON_CONTENT,
+                        StatusCode = 400
+                    };
+                }
+                else if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     var errorResponse = new ErrorResponse();
-                    errorResponse.ErrorMessage = "resource not found";
-                    errorResponse.StatusCode = 404;
+                    
+                    errorResponse.Error.ErrorMessage = "resource not found";
+                    errorResponse.Error.StatusCode = 404;
                     return new ContentResult
                     {
                         Content = JsonConvert.SerializeObject(errorResponse),

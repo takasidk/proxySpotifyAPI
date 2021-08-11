@@ -29,7 +29,7 @@ namespace SpotifyProxyAPI.Controllers
         [Produces("application/json")]
         [ModelValidationFilter]
 
-        public Task<ResponseDTO> getArtists([FromBody] ItemRequest itemRequest)
+        public Task<ActionResult> getArtists([FromBody] ItemRequest itemRequest)
         {
             var accessToken = _dataRepository.GetAccesstoken(_config.Value.SpotifySettings.ClientId, _config.Value.SpotifySettings.ClientSecret).Result;
             return _dataRepository.GetItems(itemRequest, accessToken);

@@ -51,7 +51,7 @@ namespace SpotifyProxyAPI.Middlewares
         {
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            await context.Response.WriteAsync(new ErrorResponse()
+            await context.Response.WriteAsync(new Error()
             {
                 StatusCode = context.Response.StatusCode,
                 ErrorMessage = "Internal Server Error from the custom middleware."
