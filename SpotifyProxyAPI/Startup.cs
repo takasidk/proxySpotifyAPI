@@ -23,7 +23,11 @@ namespace SpotifyProxyAPI
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
+
         {
+            Log.Logger = new LoggerConfiguration()
+                     .ReadFrom.Configuration(Configuration)
+                     .CreateLogger();
             services.Configure<DatabaseSettings>(options =>
             {
                 Configuration.GetSection("DatabaseSettings").Bind(options);
@@ -73,6 +77,7 @@ namespace SpotifyProxyAPI
 
             app.UseAuthorization();
             app.UseMiddleware(typeof(AuditMiddleware));
+            app.UseMiddleware(typeof(ErrorHandlingMiddleware));
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
