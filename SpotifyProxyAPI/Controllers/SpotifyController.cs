@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Serilog;
 using StackExchange.Profiling;
@@ -15,24 +14,25 @@ namespace SpotifyProxyAPI.Controllers
     public class SpotifyController : ControllerBase
 
     {
-        private  readonly  IOptions<UserSettings>_config;
         private readonly IDataRepository _dataRepository;
-        public SpotifyController(IOptions<UserSettings> config, IDataRepository dataRepository)
+        public SpotifyController(IDataRepository dataRepository)
         {
-            _config = config;
             _dataRepository = dataRepository;
         }
         
-
+        /// <summary>
+        /// Asynchronous method which calls GetItems Repository method
+        /// </summary>
+        /// <param name="itemRequest"></param>
+        /// <returns></returns>
         [HttpPost("getArtists")]
         [Consumes("application/json")]
         [Produces("application/json")]
         [ModelValidationFilter]
 
-        public Task<ActionResult> getArtists([FromBody] ItemRequest itemRequest)
-        {
-            var accessToken = _dataRepository.GetAccesstoken(_config.Value.SpotifySettings.ClientId, _config.Value.SpotifySettings.ClientSecret).Result;
-            return _dataRepository.GetItems(itemRequest, accessToken);
+        public async Task<ActionResult> GetArtistsAsync([FromBody] ItemRequest itemRequest)
+        {   
+            return await _dataRepository.GetItemsAsync(itemRequest);
         }
 
         #region IsAlive

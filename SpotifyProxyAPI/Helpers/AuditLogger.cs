@@ -2,7 +2,7 @@
 
 namespace SpotifyProxyAPI.Helpers
 {
-    public class AuditLogger
+    public static class AuditLogger
     {
         public static void RequestInfo(string transactionID, string method, string path, string queryString, string payload)
         {
@@ -15,7 +15,7 @@ namespace SpotifyProxyAPI.Helpers
         {
             AuditMiddleware.Logger.Information(
                 string.Format(
-                    "Request:TransactionID-{0},Method-{1},Path-{2},QueryString-{3},DatabaseName-{4},CollectionName-{5},Payload-{4}",
+                    "Request:TransactionID-{0},Method-{1},Path-{2},QueryString-{3},DatabaseName-{4},CollectionName-{5},Payload-{6}",
                 transactionID, method, path, queryString, databaseName, collectionName, payload
                     ));
         }

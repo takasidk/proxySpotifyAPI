@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SpotifyProxyAPI.Helpers
 {
-    public class Constants
+    public static class Constants
     {
         public const string UserSettings = "UserSettings";
 
@@ -19,6 +19,6 @@ namespace SpotifyProxyAPI.Helpers
 
         public const string Path = "Path";
 
-        public const string NAMEFIELD_REQUIRED = "NAMEFIELD_REQUIRED";
+        public const string QUERYFIELD_REQUIRED = "QUERYFIELD_REQUIRED";
     }
 }

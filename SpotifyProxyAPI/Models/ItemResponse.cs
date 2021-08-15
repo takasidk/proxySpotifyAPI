@@ -1,55 +1,95 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿
+using Newtonsoft.Json;
 
 namespace SpotifyProxyAPI.Models
 {
-    [BsonIgnoreExtraElements]
     public class ItemResponse
     {
-        public Artists artists { get; set; }
+        [JsonProperty(PropertyName ="artists")]
+        public Artists Artists { get; set; }
     }
     public class Artists
     {
-        public string href { get; set; }
-        public Items[] items { get; set; }
-        public int limit { get; set; }
-        public string next { get; set; }
-        public int offset { get; set; }
-        public string previous { get; set; }
-        public int total { get; set; }
+        [JsonProperty(PropertyName = "href")]
+        public string Href { get; set; }
+
+        [JsonProperty(PropertyName = "items")]
+        public Items[] Items { get; set; }
+
+        [JsonProperty(PropertyName = "limit")]
+        public int Limit { get; set; }
+
+        [JsonProperty(PropertyName = "next")]
+        public string Next { get; set; }
+
+        [JsonProperty(PropertyName = "offset")]
+        public int Offset { get; set; }
+
+        [JsonProperty(PropertyName = "previous")]
+        public string Previous { get; set; }
+
+        [JsonProperty(PropertyName = "total")]
+        public int Total { get; set; }
     }
 
     public class Items 
     {
-        public External_Urls external_urls { get; set; }
-        public Followers followers { get; set; }
-        public string[] genres { get; set; }
+        [JsonProperty(PropertyName = "external_urls")]
+        public ExternalUrls External_urls { get; set; }
 
-        public string href { get; set; }
-        public string id { get; set; }
-        public Image[] images { get; set; }
+        [JsonProperty(PropertyName = "followers")]
+        public Followers Followers { get; set; }
 
-        public string name { get; set; }
-        public int popularity { get; set; }
-        public string type { get; set; }
-        public string uri { get; set; }
+        [JsonProperty(PropertyName = "genres")]
+        public string[] Genres { get; set; }
+
+        [JsonProperty(PropertyName = "Href")]
+        public string Href { get; set; }
+
+        [JsonProperty(PropertyName = "id")]
+        public string Id { get; set; }
+
+        [JsonProperty(PropertyName = "images")]
+        public Image[] Images { get; set; }
+
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
+
+        [JsonProperty(PropertyName = "popularity")]
+        public int Popularity { get; set; }
+
+        [JsonProperty(PropertyName = "type")]
+        public string Type { get; set; }
+
+        [JsonProperty(PropertyName = "uri")]
+        public string Uri { get; set; }
 
     
     }
-    public class External_Urls
+    public class ExternalUrls
     {
-        public string spotify { get; set; }
+        [JsonProperty(PropertyName = "spotify")]
+        public string Spotify { get; set; }
     }
 
     public class Followers
     {
-        public string href { get; set; }
-        public int total { get; set; }
+        [JsonProperty(PropertyName = "href")]
+        public string Href { get; set; }
+
+        [JsonProperty(PropertyName = "total")]
+        public int Total { get; set; }
     }
     public class Image
     {
-        public int height { get; set; }
-        public string url { get; set; }
-        public int width { get; set; }
+        [JsonProperty(PropertyName = "height")]
+        public int Height { get; set; }
+
+        [JsonProperty(PropertyName = "url")]
+        public string Url { get; set; }
+
+        [JsonProperty(PropertyName = "width")]
+        public int Width { get; set; }
     }
 
 }

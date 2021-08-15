@@ -16,135 +16,163 @@ using SpotifyProxyAPI.Models;
 using SpotifyProxyAPI.Repositories.Interfaces;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
+using SpotifyProxyAPI.Middlewares;
 
 namespace SpotifyProxyAPI.Repositories
 {
     public class DataRepository : IDataRepository
     {
-        private readonly IMongoCollection<ResponseDTO> _data;
-        private readonly IOptions<DatabaseSettings> _settings;
-        private readonly IOptions<UserSettings> _config;
+        private readonly IMongoCollection<ResponseDto> _data;
         private readonly IHttpClientFactory _clientFactory;
+        private readonly IOptions<UserSettings> _config;
+        private readonly IOptions<DatabaseSettings> _settings;
         private DateTime ExpireTime = DateTime.Now;
         private string AccessToken;
-        public DataRepository(IOptions<DatabaseSettings> settings, IOptions<UserSettings> config, IHttpClientFactory clientFactory)
+        public DataRepository(IOptions<DatabaseSettings> settings, IHttpClientFactory clientFactory, IOptions<UserSettings> config)
         {
             _clientFactory = clientFactory;
             _config = config;
             _settings = settings;
-            var connection = new MongoClient(_settings.Value.ConnectionString);
-            var database = connection.GetDatabase(_settings.Value.DatabaseName);
+            
+                var connection = new MongoClient(settings.Value.ConnectionString);
+                var database = connection.GetDatabase(settings.Value.DatabaseName);
 
-            _data = database.GetCollection<ResponseDTO>(_settings.Value.CollectionName);
+                _data = database.GetCollection<ResponseDto>(settings.Value.CollectionName);
+            
         }
 
-        public async Task<string> GetAccesstoken(string clientId, string clientSecret)
+        
+        public async Task<string> GetAccesstokenAsync(string clientId, string clientSecret)
         {
+            //If AccessToken is Expired
             if (DateTime.Now >= ExpireTime)
             {
                 Log.Information("Using OAuth Endpoint to get Access Token");
-                var request = new HttpRequestMessage(HttpMethod.Post, "https://accounts.spotify.com/api/token");
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.Value.SpotifySettings.TokenUri}");
 
                 request.Headers.Authorization = new AuthenticationHeaderValue(
                                 "Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}")));
 
                 request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
+                {
                 {"grant_type", "client_credentials"}
-            });
+                });
                 var client = _clientFactory.CreateClient();
                 var response = await client.SendAsync(request);
                 response.EnsureSuccessStatusCode();
                 ExpireTime = DateTime.Now.AddHours(1);
-                using var responseStream = await response.Content.ReadAsStreamAsync();
-                var authResult = await System.Text.Json.JsonSerializer.DeserializeAsync<AuthResponse>(responseStream);
-                AccessToken = authResult.access_token;
+                 var responseStream =  response.Content.ReadAsStringAsync().Result;
+                var authResult =  JsonConvert.DeserializeObject<AuthResponse>(responseStream);
+                AccessToken = authResult.Access_token;
 
             }
             return AccessToken;
         }
-        public async Task<ActionResult> GetItems(ItemRequest itemRequest, string accessToken)
+        public async Task<ActionResult> GetItemsAsync(ItemRequest itemRequest)
 
         {
-            List<ResponseDTO> myList = new List<ResponseDTO>();
+            List<ResponseDto> myList;
+            var transId = Guid.NewGuid().ToString();
+            if (AuditMiddleware.Logger != null)
+            {
+                AuditLogger.RequestInfo(
+                    transId, Constants.Post, Constants.Path, string.Empty, itemRequest.ToString());
+            }
             var query = itemRequest.Query;
             var filter = new BsonDocument("Query", query);
             using (MiniProfiler.Current.Step("Time taken to retrieve data from database"))
             {
-                myList = _data.Find(filter).ToList();
+                try
+                {
+                    myList = _data.Find(filter).ToList();
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
             }
             if (myList.Count == 0)
             {
-                Log.Information("Getting Top 5 Artists List from Spotify Item Search Endpoint");
-                var client = _clientFactory.CreateClient();
+                var accessToken = await GetAccesstokenAsync(_config.Value.SpotifySettings.ClientId, _config.Value.SpotifySettings.ClientSecret);
 
-                client.BaseAddress = new Uri("https://api.spotify.com/v1/");
-                // client.DefaultRequestHeaders.Add("Accept", "application/json");
-                //client.DefaultRequestHeaders.Add("Content-Type", "application/json");
+                Log.Information("Getting Top 5 Artists List from Spotify Item Search Endpoint");
+
+                var client = _clientFactory.CreateClient();
+                client.BaseAddress = new Uri($"{_config.Value.SpotifySettings.ItemSearchBaseUri}");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-                var response = await client.GetAsync($"search?q={query}&type=artist&market={itemRequest.market}");//&offset=5&limit=5
+                var response = await client.GetAsync($"search?q={query}&type=artist&market=us");
 
-                if (response.StatusCode==HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
-
                     var responseStream = response.Content.ReadAsStringAsync().Result;
                     var responseObject = JsonConvert.DeserializeObject<ItemResponse>(responseStream);
 
-                    var Items = responseObject?.artists?.items.OrderByDescending(i => i.followers.total).Take(5);//.ThenBy(i => i.Popularity);
-                    var res = new ResponseDTO
+                    var Items = responseObject?.Artists?.Items.OrderByDescending(i => i.Followers.Total).Take(5);
+                    if (!Items.Any())
+                    {
+                        Log.Information("Resouce not found");
+                        var errorResponse = new ErrorResponse
+                        {
+                            ErrorMessage = "resource not found",
+                            StatusCode = 404
+                        };
+                        return new ContentResult
+                        {
+                            Content = JsonConvert.SerializeObject(errorResponse),
+                            ContentType = Constants.JSON_CONTENT,
+                            StatusCode = 404
+                        };
+                    }
+                    var res = new ResponseDto
                     {
                         Query = query,
-                        Market = itemRequest.market,
-                        ArtistsList = Items.Select(i => new Top5Artists
+
+                        Value = Items.Select(i => new Top5Artists
                         {
-                            Id = i.id,
-                            Name = i.name,
-                            Followers = i.followers.total,
-                            Popularity = i.popularity,
-                            Link = i.external_urls.spotify
+                            Id = i.Id,
+                            Name = i.Name,
+                            Followers = i.Followers.Total,
+                            Popularity = i.Popularity,
+                            Link = i.External_urls.Spotify
                         })
                     };
                     await _data.InsertOneAsync(res);
                     return new ContentResult
                     {
-                        Content = JsonConvert.SerializeObject(res.ArtistsList),
+                        Content = JsonConvert.SerializeObject(res.Value),
                         ContentType = Constants.JSON_CONTENT,
                         StatusCode = 200
                     };
                 }
-                else if (response.StatusCode==HttpStatusCode.BadRequest)
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
                 {
-                    var responseStream = response.Content.ReadAsStringAsync().Result;
-                    var responseObject = JsonConvert.DeserializeObject<ErrorResponse>(responseStream);                  
-                    return new ContentResult
+                    Log.Information("Resouce not found");
+                    var errorResponse = new ErrorResponse
                     {
-                        Content = JsonConvert.SerializeObject(responseObject?.Error),
-                        ContentType = Constants.JSON_CONTENT,
+                        ErrorMessage = "Invalid Query",
                         StatusCode = 400
                     };
-                }
-                else if (response.StatusCode == HttpStatusCode.NotFound)
-                {
-                    var errorResponse = new ErrorResponse();
-                    
-                    errorResponse.Error.ErrorMessage = "resource not found";
-                    errorResponse.Error.StatusCode = 404;
+
                     return new ContentResult
                     {
                         Content = JsonConvert.SerializeObject(errorResponse),
                         ContentType = Constants.JSON_CONTENT,
-                        StatusCode = 404
+                        StatusCode = 400
                     };
                 }
             }
-            
+            Log.Information("Value is {0}", myList[0]);
+            if (AuditMiddleware.Logger != null)
+            {
+                AuditLogger.ResponseInfo(transId, Constants.Post, Constants.Path, string.Empty, _settings.Value.DatabaseName, _settings.Value.CollectionName, myList[0].ToString());
+            }
             return new ContentResult
             {
                 Content = JsonConvert.SerializeObject(myList[0]),
                 ContentType = Constants.JSON_CONTENT,
                 StatusCode = 200
-            }; 
+            };
         }
 
 

@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Serilog;
 using Serilog.Core;
 using Serilog.Formatting.Compact;
 using SpotifyProxyAPI.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -35,10 +35,11 @@ namespace SpotifyProxyAPI.Middlewares
         }
 
         public async Task InvokeAsync(HttpContext context)
-        {
+      {
             try
             {
                 await _next(context);
+                
             }
             catch (Exception ex)
             {
@@ -51,11 +52,12 @@ namespace SpotifyProxyAPI.Middlewares
         {
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            await context.Response.WriteAsync(new Error()
+            var result = JsonConvert.SerializeObject(new ErrorResponse
             {
-                StatusCode = context.Response.StatusCode,
-                ErrorMessage = "Internal Server Error from the custom middleware."
-            }.ToString());
+                StatusCode = 500,
+                ErrorMessage = "Internal Server Error"
+            });
+            await context.Response.WriteAsync(result);
         }
     }
 }

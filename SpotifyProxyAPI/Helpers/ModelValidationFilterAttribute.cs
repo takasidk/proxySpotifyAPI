@@ -7,18 +7,18 @@ namespace SpotifyProxyAPI.Helpers
 {
     public class ModelValidationFilterAttribute : ActionFilterAttribute
     {
-        public override void OnActionExecuting(ActionExecutingContext actionContext)
+        public override void OnActionExecuting(ActionExecutingContext context)
         {
 
-            if (!actionContext.ModelState.IsValid)
+            if (!context.ModelState.IsValid)
             {
-                var response = new Error
+                var response = new ErrorResponse
                 {
                     StatusCode = 400,
-                    ErrorMessage = string.Join(", ", actionContext.ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage))
+                    ErrorMessage = string.Join(", ", context.ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage))
                 };
 
-                actionContext.Result = new BadRequestObjectResult(response);
+                context.Result = new BadRequestObjectResult(response);
 
             }
         }

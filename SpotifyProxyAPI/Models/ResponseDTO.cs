@@ -6,11 +6,11 @@ namespace SpotifyProxyAPI.Models
 {
     [BsonIgnoreExtraElements]
 
-    public class ResponseDTO
+    public class ResponseDto
     {
         public string Query { get; set; }
-        public string Market { get; set; }
-        public IEnumerable< Top5Artists> ArtistsList { get; set; }
+       
+        public IEnumerable< Top5Artists> Value { get; set; }
     }
     public class Top5Artists
     {

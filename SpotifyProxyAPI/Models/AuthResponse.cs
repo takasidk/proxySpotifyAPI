@@ -1,13 +1,20 @@
 ﻿
 
+using Newtonsoft.Json;
+
 namespace SpotifyProxyAPI.Models
 {
     public class AuthResponse
     {
-        public string access_token { get; set; }
+        [JsonProperty(PropertyName ="access_token")]
+        public string Access_token { get; set; }
 
-        public string token_type { get; set; }
 
-        public int expires_in { get; set; }
+        [JsonProperty(PropertyName = "token_type")]
+
+        public string Token_type { get; set; }
+
+        [JsonProperty(PropertyName = "expires_in")]
+        public int Expires_in { get; set; }
     }
 }
