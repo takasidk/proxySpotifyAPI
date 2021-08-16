@@ -57,13 +57,6 @@ namespace TestProject1
            
                 _options = Options.Create(new DatabaseSettings()
                 {
-                    ConnectionString = "mongodb://dt1705:fakepassword@w3.training5.modak.com:27017/?authSource=training_dotnet&readPreference=primary&appname=MongoDB%20Compass&ssl=false",
-                    DatabaseName = config.GetValue<string>("DatabaseSettings:DatabaseName"),
-                    CollectionName = config.GetValue<string>("DatabaseSettings:CollectionName")
-                });
-            
-                _options = Options.Create(new DatabaseSettings()
-                {
                     ConnectionString = config.GetValue<string>("DatabaseSettings:ConnectionString"),
                     DatabaseName = config.GetValue<string>("DatabaseSettings:DatabaseName"),
                     CollectionName = config.GetValue<string>("DatabaseSettings:CollectionName")
