@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -41,37 +42,33 @@ namespace TestProject1
         IOptions<UserSettings> _config;
         DataRepository dataRepository;
         SpotifyController controller;
-        public TestContext TestContext { get; set; }
+        
+        
         [TestInitialize]
         public void InitConfiguration()
         {
-            var config = new ConfigurationBuilder()
+             var config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.Development.json")
                 .Build();
             var services = new ServiceCollection();
             services.AddHttpClient();
             
             _clientFactory=services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
-
-
-            if (TestContext.TestName == "TestMethod5")
-            {
+           
                 _options = Options.Create(new DatabaseSettings()
                 {
                     ConnectionString = "mongodb://dt1705:fakepassword@w3.training5.modak.com:27017/?authSource=training_dotnet&readPreference=primary&appname=MongoDB%20Compass&ssl=false",
                     DatabaseName = config.GetValue<string>("DatabaseSettings:DatabaseName"),
                     CollectionName = config.GetValue<string>("DatabaseSettings:CollectionName")
                 });
-            }
-            else
-            {
+            
                 _options = Options.Create(new DatabaseSettings()
                 {
                     ConnectionString = config.GetValue<string>("DatabaseSettings:ConnectionString"),
                     DatabaseName = config.GetValue<string>("DatabaseSettings:DatabaseName"),
                     CollectionName = config.GetValue<string>("DatabaseSettings:CollectionName")
                 });
-            }
+            
             _config = Options.Create(new UserSettings()
             {
                 SpotifySettings = new SpotifySettings
@@ -144,26 +141,7 @@ namespace TestProject1
             Assert.AreEqual("true", response.Content);
         }
 
-        /*[TestMethod]
-        public async Task TestMethod5()
-        {
-            //Arrange
-            var ReqDel = new RequestDelegate(
-               new  Mock.Of<HttpContext>()
-                ) ;
-            var errorMiddleware = new ErrorHandlingMiddleware(
-                ReqDel,
-                _config
-                );
-            var result = new ItemRequest { 
-                Query="jack"
-            };
-            //Act
-            var response = await controller.GetArtistsAsync(result) as ContentResult;
-            //Assert
-            Assert.AreEqual(500, response.StatusCode);
-
-        }*/
+      
 
         [TestMethod]
         public void TestMethod6()
