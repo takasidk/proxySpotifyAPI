@@ -18,14 +18,10 @@ using Serilog;
 using SpotifyProxyAPI;
 using SpotifyProxyAPI.Controllers;
 using SpotifyProxyAPI.Helpers;
-using SpotifyProxyAPI.Middlewares;
 using SpotifyProxyAPI.Models;
 using SpotifyProxyAPI.Repositories;
-using SpotifyProxyAPI.Repositories.Interfaces;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -82,7 +78,7 @@ namespace TestProject1
           
 
         [TestMethod]
-        public async Task TestMethod1()
+        public async Task ControllerSuccess_Test()
 
         {
             //Arrange
@@ -98,7 +94,7 @@ namespace TestProject1
         }
 
         [TestMethod]
-        public async Task TestMethod2()
+        public async Task Notfound_Test()
         {
             //Arrange
             var request = new ItemRequest
@@ -112,7 +108,7 @@ namespace TestProject1
         }
 
         [TestMethod]
-        public async Task  TestMethod3()
+        public async Task  BadRequest_Test()
         {
             //Arrange
             var request = new ItemRequest
@@ -126,7 +122,7 @@ namespace TestProject1
         }
 
         [TestMethod]
-        public async Task TestMethod4()
+        public async Task Health_Test()
         {
             //Act
             var response = await controller.IsAliveAsync() as ContentResult;
@@ -134,10 +130,42 @@ namespace TestProject1
             Assert.AreEqual("true", response.Content);
         }
 
-      
+        [TestMethod]
+
+        public async Task ErrorHandlerMiddleware_Test()
+        {
+            //Arrange
+            var projectDir = Directory.GetCurrentDirectory();
+
+            var config = new ConfigurationBuilder()
+                .SetBasePath(projectDir)
+                .AddJsonFile("appsettings.Development.json")
+                .Build();
+            config["DatabaseSettings:ConnectionString"] = "FakeConnectionString";
+            var server = new TestServer(new WebHostBuilder()
+                .UseContentRoot(projectDir)
+                .UseConfiguration(config)
+                .UseStartup<Startup>()
+                .UseSerilog());
+            
+            using var client = server.CreateClient();
+            var request = new ItemRequest
+            {
+                Query = "jack"
+            };
+            string strPayload = Newtonsoft.Json.JsonConvert.SerializeObject(request);
+            HttpContent c = new StringContent(strPayload, Encoding.UTF8, "application/json");
+
+            //Act
+            var result = await client.PostAsync("/api/Spotify/getArtists", c);
+           
+            // Assert
+            
+            Assert.AreEqual(500, (int)result.StatusCode);
+        }
 
         [TestMethod]
-        public void TestMethod6()
+        public void ModelValidationFilter_Test()
         {
             var ioptions = new Mock<IOptions<DatabaseSettings>>();
             var datarepo = new Mock<DataRepository>(ioptions);
