@@ -11,6 +11,9 @@ using SpotifyProxyAPI.Models;
 
 namespace SpotifyProxyAPI.Middlewares
 {
+    /// <summary>
+    /// Middleware to log request and response 
+    /// </summary>
     public class AuditMiddleware
     {
         /// <summary>

@@ -11,28 +11,31 @@ using System.Threading.Tasks;
 
 namespace SpotifyProxyAPI.Middlewares
 {
+    /// <summary>
+    /// Middleware which throws custom error response if there are any exceptions in the application
+    /// </summary>
     public class ErrorHandlingMiddleware
     {
+        /// <summary>
+        /// To process HTTP request
+        /// </summary>
         private readonly RequestDelegate _next;
 
-        private readonly Logger _logger;
-
-        public static Logger Logger { get; set; }
-
-        public ErrorHandlingMiddleware(RequestDelegate requestDelegate, IOptions<UserSettings> config)
+    
+        /// <summary>
+        /// Custom parameter constructor
+        /// </summary>
+        /// <param name="requestDelegate"></param>
+        public ErrorHandlingMiddleware(RequestDelegate requestDelegate)
         {
-            _logger = new Serilog.LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .Enrich.FromLogContext()
-                .WriteTo.File(new CompactJsonFormatter(), config.Value.AuditLog.Path,
-                rollingInterval: (RollingInterval)Enum.Parse(typeof(RollingInterval), config.Value.AuditLog.RollingInterval),
-                shared: config.Value.AuditLog.Shared,
-                retainedFileCountLimit: config.Value.AuditLog.RetainedFileCountLimit).CreateLogger();
-            Logger = _logger;
-
             _next = requestDelegate;
         }
 
+        /// <summary>
+        /// Asynchronus method which checks for any exception in the context
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public async Task InvokeAsync(HttpContext context)
       {
             try
@@ -42,11 +45,17 @@ namespace SpotifyProxyAPI.Middlewares
             }
             catch (Exception ex)
             {
-                _logger.Error($"Something went wrong: {ex}");
+                Log.Error($"Something went wrong: {ex}");
                 await HandleExceptionAsync(context, ex);
             }
         }
 
+        /// <summary>
+        /// Asynchronus method which writes custom error response to the response body
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="exception"></param>
+        /// <returns></returns>
         public async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";

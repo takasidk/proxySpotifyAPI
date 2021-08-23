@@ -5,8 +5,15 @@ using SpotifyProxyAPI.Models;
 
 namespace SpotifyProxyAPI.Helpers
 {
+    /// <summary>
+    /// Validating the request 
+    /// </summary>
     public class ModelValidationFilterAttribute : ActionFilterAttribute
     {
+        /// <summary>
+        /// Method which throws a custom error response if model is invalid
+        /// </summary>
+        /// <param name="context"></param>
         public override void OnActionExecuting(ActionExecutingContext context)
         {
 

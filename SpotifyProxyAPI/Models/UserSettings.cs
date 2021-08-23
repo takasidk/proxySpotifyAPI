@@ -2,6 +2,9 @@
 
 namespace SpotifyProxyAPI.Models
 {
+    /// <summary>
+    /// User Settings parameters
+    /// </summary>
     public class UserSettings
     {
         public string BasePath { get; set; }
@@ -9,6 +12,10 @@ namespace SpotifyProxyAPI.Models
         public SpotifySettings SpotifySettings { get; set; }
         public AuditLog AuditLog { get; set; }
     }
+
+    /// <summary>
+    /// Spotify settings
+    /// </summary>
     public class SpotifySettings
     {
         public string ClientId { get; set; }

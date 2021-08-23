@@ -3,6 +3,9 @@ using Newtonsoft.Json;
 
 namespace SpotifyProxyAPI.Models
 {
+    /// <summary>
+    /// Response model class which contains Array of Item objects wrapped inside a Artists Object
+    /// </summary>
     public class ItemResponse
     {
         [JsonProperty(PropertyName ="artists")]

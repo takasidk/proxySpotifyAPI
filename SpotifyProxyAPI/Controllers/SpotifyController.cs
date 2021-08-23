@@ -35,6 +35,10 @@ namespace SpotifyProxyAPI.Controllers
             return await _dataRepository.GetItemsAsync(itemRequest);
         }
 
+        /// <summary>
+        /// Health check endpoint
+        /// </summary>
+        /// <returns></returns>
         #region IsAlive
         [HttpGet("health")]
         public async Task<IActionResult> IsAliveAsync()

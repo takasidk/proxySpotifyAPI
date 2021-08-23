@@ -4,8 +4,12 @@ using System.Collections.Generic;
 
 namespace SpotifyProxyAPI.Models
 {
+    /// <summary>
+    /// Final Response class which has querry and array of top 5 artist objects
+    /// </summary>
     [BsonIgnoreExtraElements]
 
+    
     public class ResponseDto
     {
         public string Query { get; set; }
