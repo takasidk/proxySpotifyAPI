@@ -39,7 +39,10 @@ namespace SpotifyProxyAPI
             services.AddControllers();
             services.AddSwaggerDocument();
             services.AddSingleton<IDataRepository, DataRepository>();
-            services.AddHttpClient();
+            services.AddHttpClient("Spotify", c=> {
+                c.BaseAddress = new System.Uri(Configuration["UserSettings:SpotifySettings:ItemSearchBaseUri"]);
+
+            });
             if (Configuration["UserSettings:EnableMiniProfiler"] == "True")
             {
                 services.AddMiniProfiler(options =>

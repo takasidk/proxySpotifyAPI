@@ -31,6 +31,13 @@ namespace SpotifyProxyAPI.Repositories
         private readonly IOptions<DatabaseSettings> _settings;
         private DateTime ExpireTime = DateTime.Now;
         private string AccessToken;
+
+        /// <summary>
+        /// Custom Parameterised Constructor
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <param name="clientFactory"></param>
+        /// <param name="config"></param>
         public DataRepository(IOptions<DatabaseSettings> settings, IHttpClientFactory clientFactory, IOptions<UserSettings> config)
         {
             _clientFactory = clientFactory;
@@ -45,6 +52,12 @@ namespace SpotifyProxyAPI.Repositories
         }
 
         
+        /// <summary>
+        /// Async method which calls OAuth endpoint of Spotify if the accesstoken is expired
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="clientSecret"></param>
+        /// <returns></returns>
         public async Task<string> GetAccesstokenAsync(string clientId, string clientSecret)
         {
             //If AccessToken is Expired
@@ -71,6 +84,12 @@ namespace SpotifyProxyAPI.Repositories
             }
             return AccessToken;
         }
+
+        /// <summary>
+        /// Async method which calls Item search end point of spotify and returns top 5 artists as a list
+        /// </summary>
+        /// <param name="itemRequest"></param>
+        /// <returns></returns>
         public async Task<ActionResult> GetItemsAsync(ItemRequest itemRequest)
 
         {
@@ -100,8 +119,8 @@ namespace SpotifyProxyAPI.Repositories
 
                 Log.Information("Getting Top 5 Artists List from Spotify Item Search Endpoint");
 
-                var client = _clientFactory.CreateClient();
-                client.BaseAddress = new Uri($"{_config.Value.SpotifySettings.ItemSearchBaseUri}");
+                var client = _clientFactory.CreateClient("Spotify");
+                
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
                 var response = await client.GetAsync($"search?q={query}&type=artist&market=us");
@@ -179,6 +198,10 @@ namespace SpotifyProxyAPI.Repositories
         }
 
 
+        /// <summary>
+        /// Async method which checks health of the API
+        /// </summary>
+        /// <returns></returns>
         #region
         public async Task<bool> IsAliveAsync()
         {
