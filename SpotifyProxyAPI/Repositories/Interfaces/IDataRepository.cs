@@ -4,6 +4,9 @@ using SpotifyProxyAPI.Models;
 
 namespace SpotifyProxyAPI.Repositories.Interfaces
 {
+    /// <summary>
+    /// Data repository Interface 
+    /// </summary>
     public interface IDataRepository
     {
         public  Task<string> GetAccesstokenAsync(string clientId, string clientSecret);

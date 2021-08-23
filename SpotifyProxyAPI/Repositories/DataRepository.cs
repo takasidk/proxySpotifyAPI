@@ -20,6 +20,9 @@ using SpotifyProxyAPI.Middlewares;
 
 namespace SpotifyProxyAPI.Repositories
 {
+    /// <summary>
+    /// Data respositoy which implements IDataRespository Interface 
+    /// </summary>
     public class DataRepository : IDataRepository
     {
         private readonly IMongoCollection<ResponseDto> _data;
