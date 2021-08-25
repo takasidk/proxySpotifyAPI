@@ -31,6 +31,11 @@ namespace SpotifyProxyAPI.Middlewares
         /// </summary>
         public static Logger Logger { get; set; }
 
+        /// <summary>
+        /// Parameterised Constructor
+        /// </summary>
+        /// <param name="requestDelegate"></param>
+        /// <param name="config"></param>
         public AuditMiddleware(RequestDelegate requestDelegate, IOptions<UserSettings> config)
         {
             _logger = new Serilog.LoggerConfiguration()
@@ -45,6 +50,11 @@ namespace SpotifyProxyAPI.Middlewares
             _next = requestDelegate;
         }
 
+        /// <summary>
+        /// Async method which logs the context request and response
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public async Task InvokeAsync(HttpContext context)
         {
             var transId = Guid.NewGuid().ToString();

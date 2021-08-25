@@ -36,7 +36,7 @@ namespace SpotifyProxyAPI.Controllers
         }
 
         /// <summary>
-        /// Health check endpoint
+        /// Health check 
         /// </summary>
         /// <returns></returns>
         #region IsAlive
